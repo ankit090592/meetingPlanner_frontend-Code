@@ -1,0 +1,254 @@
+<div class="container-fluid" *ngIf="pageFound==true">
+  <!-- modal for showing meeting details/option of edit & delete  -->
+  <ng-template #modalContent let-modal class="modal fade">
+    <div class="modal-header">
+      <h4 class="modal-title">
+        <div class="row no-gutters">
+          <div class="col-auto">Meeting: &nbsp;</div>
+          <div class="col">{{meetingDetails.event.title}}<br>
+          </div>
+        </div>
+        <div class="row no-gutters">
+          <div class="col-auto">Org. by: &nbsp;</div>
+          <div class="col">{{meetingDetails.event.adminFullName}}<br>
+          </div>
+        </div>
+
+      </h4>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close" (click)="modal.dismiss()">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">                                                                                                                                                                                                                                   
+      <form #createMeeting="ngForm" (ngSubmit)="createNewMeeting()">
+        <div class="form-group d-lg-flex flex-direction-row">
+          <div>
+            <div>Start Time</div>
+            <input *ngIf="readOnly==true" class="form-control" type="text"
+            [value]="startTime | date : 'dd/MM/yyyy - HH:mm'" placeholder="Start" autocomplete="off" [readonly]="readOnly">
+            <input *ngIf="readOnly==false" class="form-control" type="text" name="start" [(ngModel)]="startTime"
+              placeholder="Start" autocomplete="off" mwlFlatpickr (ngModelChange)="refresh.next()"
+              [convertModelValue]="true" enableTime="true" dateFormat="d/m/Y - H:i" minDate="today" [allowInput]="true"
+              static="true" [readonly]="readOnly">
+          </div>
+          <div class="ml-auto">
+            <div>End Time</div>
+            <input *ngIf="readOnly==true" [value]="endTime | date : 'dd/MM/yyyy - HH:mm'" class="form-control"
+              type="text" placeholder="Start" autocomplete="off" [readonly]="readOnly">
+            <input *ngIf="readOnly==false" autocomplete="off" placeholder="End" class="form-control" name="end"
+              type="text" mwlFlatpickr [(ngModel)]="endTime" (ngModelChange)="refresh.next()" [convertModelValue]="true"
+              enableTime="true" dateFormat="d/m/Y - H:i" minDate="today" [allowInput]="true" static="true"
+              [readonly]="readOnly">
+          </div>
+        </div>
+        <div class="form-group">
+          <div>Title</div>
+          <input name="title" [(ngModel)]="meetingTitle" placeholder="purpose of the meeting" type="text"
+            class="form-control" required autocomplete="off" [readonly]="readOnly">
+        </div>
+        <div class="form-group">
+          <div>Venue</div>
+          <input name="venue" type="text" [(ngModel)]="meetingVenue" placeholder="eg. meeting room" class="form-control"
+            required autocomplete="off" [readonly]="readOnly">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteMeetingModal"
+            (click)="modal.dismiss()">Delete</button>
+          <button *ngIf="readOnly==true" type="button" class="btn btn-success"
+            (click)="readOnly=false;currentTimeOnly()">Edit</button>
+          <button *ngIf="readOnly==false" type="button" class="btn btn-primary"
+            (click)="readOnly=true;modal.dismiss();editMeeting()">Save</button>
+        </div>
+      </form>
+    </div>
+  </ng-template>
+  <!-- modal end -->
+
+  
+  <!-- delete meeting modal -->
+  <div class="modal fade" id="deleteMeetingModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-dark" id="exampleModalLongTitle">Delete this meeting?</h5>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="cancel btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" (click)="deleteMeeting(meetingDetails.event)">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- delete meeting modal end-->
+
+  <!-- top nav -->
+  <nav class="navbar navbar-dark fixed-top navbar-expand-lg p-1">
+    <a class="navbar-brand col-auto col-sm-2 p-0 mr-0" style="color:#fff">
+      <img src="../../../assets/icons/ic_main.ico" height="25" class="d-inline-block align-top" alt="">
+      Meeting Planner</a>
+
+    <!-- navbar toggler -->
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto d-md-none">
+        <li class="nav-item" style="color: #fff">
+          {{userFullName}}<span style="float: right"><a class="nav-link" (click)="logout()">Logout</a></span>
+        </li>
+
+        <li class="nav-item active">
+          <a class="nav-link">Dashboard <span class="sr-only">(current)</span></a>
+        </li>
+
+      </ul>
+
+      <!-- navbar-toggler end -->
+    </div>
+  </nav>
+  <!-- top nav end-->
+
+  <!-- sidebar - for nav/logout -->
+  <div class="row">
+    <nav class="col-sm-2 d-none d-md-block bg-light sidebar">
+      <div class="sidebar-sticky d-flex align-items-start flex-column">
+        <div *ngIf="validateCreateMeeting(); else elseBlock" class="mb-auto">
+          <a class="nav-link active d-flex" [routerLink]="['/admin/dashboard']">
+            <i class="material-icons mr-1">
+              home
+            </i>
+            Dashboard <span class="sr-only">(current)</span>
+          </a>
+
+          <a class="nav-link d-flex" data-toggle="modal" data-target="#createMeetingModal"
+            (click)="meetingTitle='';meetingVenue='';currentTimeOnly()">
+            <i class="material-icons mr-1">
+              add_circle
+            </i>
+            Create meeting
+          </a>
+        </div>
+        <ng-template #elseBlock>
+          <a class="nav-link active d-flex mb-auto" [routerLink]="['/admin/dashboard']">
+            <i class="material-icons mr-1">
+              home
+            </i>
+            Dashboard <span class="sr-only">(current)</span>
+          </a>
+        </ng-template>
+        <i class="material-icons align-self-center">
+          account_circle
+        </i>
+
+        <span class="profile align-self-center">
+          {{userInfo.fullName}}
+        </span>
+
+        <span class="profile align-self-center">
+          @{{userInfo.userName}}
+        </span>
+
+        <a class="profile align-self-center" style="cursor: pointer" (click)="logout()">
+          Logout
+        </a>
+
+      </div>
+    </nav>
+    <!-- sidebar ends -->
+
+    <!-- main content -->
+    <main role="main" class="col-md-10 ml-sm-auto ">
+      <!-- create meeting modal -->
+      <div class="modal fade" id="createMeetingModal" tabindex="-1" role="dialog"
+        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLongTitle">Create Meeting</h5>
+            </div>
+            <div class="modal-body">
+              <form #createMeeting="ngForm" (ngSubmit)="createNewMeeting()">
+
+                <div class="form-group d-lg-flex flex-direction-row">
+                  <div>
+                    <div>Start Time</div>
+                    <input name="start" [(ngModel)]="startTime" placeholder="Start" autocomplete="off"
+                      class="form-control" type="text" mwlFlatpickr (ngModelChange)="refresh.next()" value="startTime"
+                      [convertModelValue]="true" enableTime="true" dateFormat="d/m/Y - H:i" minDate="today"
+                      [allowInput]="true" static="true">
+                  </div>
+                  <div class="ml-auto">
+                    <div>End Time</div>
+                    <input class="form-control" name="end" [(ngModel)]="endTime" autocomplete="off" placeholder="End"
+                      type="text" mwlFlatpickr (ngModelChange)="refresh.next()" [convertModelValue]="true"
+                      enableTime="true" dateFormat="d/m/Y - H:i" minDate="today" [allowInput]="true" static="true">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <div>Title</div>
+                  <input name="title" [(ngModel)]="meetingTitle" placeholder="what's the meeting about" type="text"
+                    class="form-control" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                  <div>Venue</div>
+                  <input name="venue" type="text" [(ngModel)]="meetingVenue" placeholder="ex. conference room"
+                    class="form-control" required autocomplete="off">
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="cancel btn btn-secondary" data-dismiss="modal">Cancel</button>
+                  <button type="submit" [disabled]="!createMeeting.form.valid" class="btn btn-primary">Create</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- create meeting modal end -->
+
+      <h1 class="h2">{{user.firstName}}'s meetings</h1>
+      <div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <div class="btn-toolbar ">
+          <div class="btn-group">
+            <div class="btn btn-sm btn-dark" mwlCalendarPreviousView [view]="view" [(viewDate)]="viewDate"
+              (viewDateChange)="activeDayIsOpen = false">
+              Previous
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" mwlCalendarToday
+              [(viewDate)]="viewDate">Today</button>
+            <button type="button" class="btn btn-sm btn-dark" mwlCalendarNextView [view]="view" [(viewDate)]="viewDate"
+              (viewDateChange)="activeDayIsOpen = false">
+              Next
+            </button>
+          </div>
+        </div>
+        <h3>{{ viewDate | calendarDate:(view + 'ViewTitle'):'en' }}</h3>
+        <div class="btn-toolbar ">
+          <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-dark" (click)="setView(CalendarView.Month)"
+              [class.active]="view === CalendarView.Month">
+              Month
+            </button>
+            <button type="button" class="btn btn-sm btn-dark" (click)="setView(CalendarView.Day)"
+              [class.active]="view === CalendarView.Day">
+              Day
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div [ngSwitch]="view">
+        <mwl-calendar-month-view *ngSwitchCase="CalendarView.Month" [viewDate]="viewDate" [events]="events"
+          [refresh]="refresh" [activeDayIsOpen]="activeDayIsOpen" (dayClicked)="dayClicked($event.day)"
+          (eventClicked)="handleEvent('Clicked', $event.event)">
+        </mwl-calendar-month-view>
+
+        <mwl-calendar-day-view *ngSwitchCase="CalendarView.Day" [viewDate]="viewDate" [events]="events"
+          [refresh]="refresh" (eventClicked)="handleEvent('Clicked', $event.event)">
+        </mwl-calendar-day-view>
+      </div>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,190 @@
+<div class="container-fluid" *ngIf="userInfo">
+  <!-- modal content for showing meeting details in modal  -->
+  <ng-template #modalContent let-modal class="modal fade">
+    <div class="modal-header">
+      <h4 class="modal-title">
+        <div class="row no-gutters">
+          <div class="col-auto">Meeting: &nbsp;</div>
+          <div class="col">{{meetingDetails.event.title}}<br>
+          </div>
+        </div>
+        <div class="row no-gutters">
+          <div class="col-auto">Org. by: &nbsp;</div>
+          <div class="col">{{meetingDetails.event.adminFullName}}<br>
+          </div>
+        </div>
+      </h4>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close" (click)="modal.dismiss()">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form>
+        <div class="form-group">
+          <div>Venue</div>
+          <input name="venue" type="text" [value]="meetingDetails.event.venue" class="form-control" readonly>
+        </div>
+        <div class="form-group d-lg-flex flex-direction-row">
+          <div>
+            <div>Start Time</div>
+            <input [value]="meetingDetails.event.start | date : 'dd/MM/yyyy - HH:mm'" class="form-control" type="text"
+              readonly>
+          </div>
+          <div class="ml-auto">
+            <div>End Time</div>
+            <input [value]="meetingDetails.event.end | date : 'dd/MM/yyyy - HH:mm'" class="form-control" type="text"
+              readonly>
+          </div>
+        </div>
+      </form>
+    </div>
+  </ng-template>
+
+  <!-- modal for showing alert 1 minute before start of meeting -->
+  <ng-template #modalAlarm id="modalAlarm" let-modal class="modal fade">
+    <div class="modal-header">
+      <h4 class="modal-title">
+        Alert! You have an upcoming meeting in 15 minutes.
+      </h4>
+    </div>
+    <div class="modal-body">
+      <div class="container">
+        <div class="row">
+          <div class="col-auto"><b>Title:</b></div>
+          <div class="col">{{alarmContent.title}}</div>
+        </div>
+        <div class="row">
+          <div class="col-auto"><b>Venue:</b></div>
+          <div class="col">{{alarmContent.venue}}</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-warning"
+        (click)="revokeAlarm();modal.dismiss()">Snooze</button>
+      <button type="button" class="btn btn-danger"
+        (click)="modal.dismiss();toastrService.success('Alarm dismissed');">Dismiss</button>
+    </div>
+  </ng-template>
+
+  <nav class="navbar navbar-dark fixed-top navbar-expand-lg p-1">
+    <a class="navbar-brand col-auto col-sm-2 p-0 mr-0" style="color:#fff">
+      <img src="../../../assets/icons/ic_main.ico" height="25" class="d-inline-block align-top" alt="main app logo">
+      Meeting Planner</a>
+
+    <!-- navbar toggler -->
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto d-md-none">
+        <li class="nav-item" style="color: #fff">
+          {{userFullName}}<span style="float: right"><a class="nav-link" (click)="logout()">Logout</a></span>
+        </li>
+
+        <li class="nav-item active">
+          <a class="nav-link">Dashboard <span class="sr-only">(current)</span></a>
+        </li>
+
+      </ul>
+
+      <!-- navbar-toggler end -->
+    </div>
+  </nav>
+
+
+
+  <div class="row">
+    <!-- sidebar - for nav/logout -->
+    <nav class="col-sm-2 d-none d-md-block bg-light sidebar">
+      <div class="sidebar-sticky d-flex align-items-start flex-column">
+
+        <a class="nav-link active d-flex mb-auto">
+          <i class="material-icons mr-1">
+            home
+          </i>
+          Dashboard <span class="sr-only">(current)</span>
+        </a>
+
+        <i class="material-icons align-self-center">
+          account_circle
+        </i>
+
+        <span class="profile align-self-center">
+          {{userFullName}}
+        </span>
+
+        <span class="profile align-self-center">
+          @{{userName}}
+        </span>
+
+        <a class="profile align-self-center" style="cursor: pointer" (click)="logout()">
+          Logout
+        </a>
+
+      </div>
+    </nav>
+    <!-- sidebar ends -->
+
+    <!-- main content -->
+    <main role="main" class="col-md-10 ml-sm-auto ">
+      <h1 class="h2">Your meetings</h1>
+      <div class="d-flex justify-content-between flex-wrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <div class="btn-toolbar ">
+          <div class="btn-group">
+            <div class="btn btn-sm btn-dark"
+            mwlCalendarPreviousView [view]="view" [(viewDate)]="viewDate" (viewDateChange)="activeDayIsOpen = false">
+              Previous
+          </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" mwlCalendarToday
+            [(viewDate)]="viewDate">Today</button>
+            <button type="button" class="btn btn-sm btn-dark" 
+            mwlCalendarNextView [view]="view" [(viewDate)]="viewDate" (viewDateChange)="activeDayIsOpen = false">
+              Next
+            </button>
+          </div>
+        </div>
+        <h3>{{ viewDate | calendarDate:(view + 'ViewTitle'):'en' }}</h3>
+        <div class="btn-toolbar ">
+          <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-dark"
+            (click)="setView(CalendarView.Month)"
+        [class.active]="view === CalendarView.Month">
+              Month
+            </button>
+            <button type="button" class="btn btn-sm btn-dark"
+            (click)="setView(CalendarView.Day)"
+        [class.active]="view === CalendarView.Day">
+              Day
+            </button>
+          </div>
+        </div>
+    </div>
+    
+    <div [ngSwitch]="view">
+      <mwl-calendar-month-view
+        *ngSwitchCase="CalendarView.Month"
+        [viewDate]="viewDate"
+        [events]="events"
+        [refresh]="refresh"
+        [activeDayIsOpen]="activeDayIsOpen"
+        (dayClicked)="dayClicked($event.day)"
+        (eventClicked)="handleEvent('Clicked', $event.event)"
+      >
+      </mwl-calendar-month-view>
+      
+      <mwl-calendar-day-view
+        *ngSwitchCase="CalendarView.Day"
+        [viewDate]="viewDate"
+        [events]="events"
+        [refresh]="refresh"
+        (eventClicked)="handleEvent('Clicked', $event.event)"
+      >
+      </mwl-calendar-day-view>
+    </div>
+    </main>
+  </div>
+</div>

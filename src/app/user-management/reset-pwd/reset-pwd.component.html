@@ -1,0 +1,32 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+      <div class="card card-signin my-5">
+        <div class="card-body">
+          <div class="app-logo mb-2">
+            <img class="text-center img" src="../../../assets/images/mainLogo.png">
+          </div>
+          
+          <h5 class="card-title text-center">Reset Password</h5>
+          <form class="form-signin" (ngSubmit)="f.form.valid && onSubmit()" #f="ngForm" novalidate>
+            <!---------- password field --------->
+            <div class="form-label-group">
+
+                <input type="password" name="password" [(ngModel)]="model.password" #password="ngModel" id="inputPassword"
+                  class="form-control" placeholder="Enter a new password"
+                  [ngClass]="{ 'is-invalid': f.submitted && password.invalid }" required minlength="6">
+                <div *ngIf="f.submitted && password.invalid" class="invalid-feedback">
+                  <div *ngIf="password.errors.required">Password is required</div>
+                  <div *ngIf="password.errors.minlength">Password must be at least 6 characters</div>
+                </div>
+                <label for="inputPassword">Password</label>
+              </div>
+
+              <button class="btn btn-lg btn-primary btn-block text-uppercase" type="submit">Submit</button>
+            
+          </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

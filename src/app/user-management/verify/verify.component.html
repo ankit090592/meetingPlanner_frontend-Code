@@ -1,0 +1,21 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+      <div class="card card-signin my-5">
+        <div class="card-body">
+          <div class="app-logo mb-2">
+            <img class="img-fluid" style="max-height: 18vh" src="../../../assets/images/mainLogo.png">
+          </div>
+          <h4 class="card-title text-center">Account Verification Status</h4>
+          <div *ngIf = "verified == true">
+          <h5 class="card-title text-center">Account verified!</h5>
+          <div class="col">
+            Click <a [routerLink]="['/login']">here</a> to login.
+          </div>
+        </div>
+          <h5 *ngIf = "verified == false" class="card-title text-center">Error! Try again.</h5>          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
